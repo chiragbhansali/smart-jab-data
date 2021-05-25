@@ -1,0 +1,92 @@
+Mumbai: Mumbai
+Delhi: Central Delhi, East Delhi, New Delhi, North Delhi, North East Delhi, North West Delhi, Shahdara, South Delhi, South East Delhi, South West Delhi, West Delhi
+Bangalore/Bengaluru: Bangalore Rural, Bangalore Urban, BBMP
+Hyderabad: Hyderabad
+Ahmedabad/Karnavati: Ahmedabad, Ahmedabad Corporation
+Chennai: Chennai
+Kolkata: Kolkata
+Surat: Surat, Surat Corporation
+Pune: Pune
+Jaipur: Jaipur I, Jaipur II
+Lucknow: Lucknow
+Kanpur/Cawnpore: Kanpur Dehat, Kanpur Nagar
+Nagpur: Nagpur
+Indore: Indore
+Thane: Thane
+Bhopal: Bhopal
+Visakhapatnam: Visakhapatnam
+Coimbatore: Coimbatore
+Patna: Patna
+Vadodara/Baroda: Vadodara, Vadodara Corporation
+Ghaziabad: Ghaziabad
+Ludhiana: Ludhiana
+Agra: Agra
+Nashik: Nashik
+Ranchi: Ranchi
+Faridabad: Faridabad
+Meerut: Meerut
+Rajkot: Rajkot, Rajkot Corporation
+Vasai-Virar: Palghar 
+Varanasi/Benares/Banaras: Varanasi
+Srinagar: Srinagar
+Aurangabad: Aurangabad
+Dhanbad: Dhanbad
+Amritsar: Amritsar
+Navi Mumbai: Thane, Raigad
+Allahabad/Prayagraj/Ilahabad: Prayagraj
+Howrah: Howrah
+Gwalior: Gwalior
+Jabalpur: Jabalpur
+Salem: Salem
+Vijayawada/Bezawada: Krishna
+Jodhpur: Jodhpur
+Madurai: Madurai
+Raipur: Raipur
+Kota: Kota
+Chandigarh: Chandigarh
+Guwahati: Kamrup Metropolitan 
+Solapur: Solapur
+Hubli–Dharwad: Dharwad
+Mysore: Mysore
+Tiruchirappalli: Tiruchirappalli
+Bareilly: Bareilly
+Aligarh: Aligarh
+Tiruppur: Tiruppur
+Gurgaon/Gurugram: Gurgaon 
+Moradabad: Moradabad
+Jalandhar: Jalandhar
+Bhubaneswar: Khorda
+Warangal: Warangal Rural, Warangal Urban
+Jalgaon: Jalgaon
+Guntur: Guntur
+Thiruvananthapuram: Thiruvananthapuram 
+Saharanpur: Saharanpur
+Gorakhpur: Gorakhpur
+Bikaner: Bikaner
+Amravati: Amravati
+Noida: Gautam Buddh Nagar 
+Jamshedpur: East Singhbhum
+Bhilai: Durg
+Cuttack: Cuttack
+Firozabad: Firozabad
+Kochi/Cochin: Ernakulam
+Nellore: Sri Potti Sriramulu Nellore
+Bhavnagar: Bhavnagar, Bhavnagar Corporation
+Dehradun: Dehradun
+Durgapur: East Bardhaman
+Rourkela: Sundargarh
+Nanded: Nanded
+Kolhapur: Kolhapur
+Ajmer: Ajmer
+Akola: Akola
+Gulbarga: Gulbarga
+Jamnagar: Jamnagar, Jamnagar Corporation
+Ujjain: Ujjain
+Loni: Ghaziabad
+Siliguri: Darjeeling, Jalpaiguri
+Jhansi: Jhansi
+Jammu: Jammu
+Mangalore: Dakshina Kannada
+Erode: Erode
+Belgaum: Belgaum
+Kurnool: Kurnool
