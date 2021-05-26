@@ -25,7 +25,7 @@ districts = {
     149: 'South Delhi',
     144: 'South East Delhi',
     150: 'South West Delhi',
-    395: 'Mumbai', 
+    395: 'Mumbai',
     199: 'Faridabad',
     188: 'Gurgaon',
     276: 'Bangalore Rural',
@@ -81,7 +81,6 @@ def today() -> str:
 def cia(dict_1):
     # Read CSV
     df = pd.read_csv('centers_top25.csv')
-    # Remove first column in df (first column is index col created by pandas)
     if list(df.columns)[0] != "Center Name":
         df.drop(columns=list(df.columns)[0], inplace=True)
 
@@ -103,8 +102,6 @@ def cia(dict_1):
         try:
             # Get data from CoWin API for district ID
             centers = cowin.get_availability_by_district(str(district_id))
-            # if district_id == 637:
-            #     print(json.dumps(centers, indent = 1))
         except TypeError:
             print("API Rate Limit Exceeded!")
             continue
@@ -120,7 +117,6 @@ def cia(dict_1):
                 df = df.append(test, ignore_index=True)
                 df.drop_duplicates(subset=['Center ID'], inplace=True)
         try:
-
             # loop through centers in district
             for c in range(len(centers['centers'])):
                 # get center_id
@@ -139,15 +135,11 @@ def cia(dict_1):
 
                     # check if dose1 >= 10 and min_age_limit == 18
                     if session['available_capacity_dose1'] >= 10 and session["min_age_limit"] == 18:
-                        print(centers['centers'][c]['name'])
                         # Get type of cell
                         res = df.loc[df["Center ID"] == float(
                             center_id), date_session].apply(type)
                         # check if type of cell is not str
                         if (res != str).bool():
-                            print(consecutiveSlot + " " + centers['centers'][c]['name'] +
-                                      " " + centers['centers'][c]['pincode'])
-                            # print(consecutiveSlot)
                             if consecutiveSlot == 0:
                                 df.loc[df["Center ID"] ==
                                        float(center_id), date_session] = now
@@ -155,13 +147,14 @@ def cia(dict_1):
                             elif consecutiveSlot > 0:
                                 consecutiveSlot += 1
                                 print(centers['centers'][c]['name'] +
-                                      " " + centers['centers'][c]['pincode'])
+                                      " " + str(centers['centers'][c]['pincode']))
                                 df.loc[df["Center ID"] == float(
-                                    center_id), date_session] = 'Open'
+                                    center_id), date_session] = 'Prev'
         except:
             continue
     if list(df.columns)[0] != "Center Name":
         df.drop(columns=list(df.columns)[0], inplace=True)
+
     df.to_csv('centers_top25.csv')
     try:
         df.to_csv('centers_top25_copy.csv')
