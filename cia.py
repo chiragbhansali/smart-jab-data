@@ -235,9 +235,9 @@ def cia(dict_1):
                             elif consecutiveSlot > 0:
                                 consecutiveSlot += 1
                                 print(centers['centers'][c]['name'] +
-                                      " " + centers['centers'][c]['pincode'])
+                                      " " + str(centers['centers'][c]['pincode']))
                                 df.loc[df["Center ID"] == float(
-                                    center_id), date_session] = 'NA'
+                                    center_id), date_session] = 'Prev'
         except:
             continue
     if list(df.columns)[0] != "Center Name":
