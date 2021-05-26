@@ -234,7 +234,8 @@ def cia(dict_1):
                                 consecutiveSlot += 1
                             elif consecutiveSlot > 0:
                                 consecutiveSlot += 1
-                                sessionDate = date_session
+                                print(centers['centers'][c]['name'] +
+                                      " " + centers['centers'][c]['pincode'])
                                 df.loc[df["Center ID"] == float(
                                     center_id), date_session] = 'NA'
         except:
@@ -242,7 +243,10 @@ def cia(dict_1):
     if list(df.columns)[0] != "Center Name":
         df.drop(columns=list(df.columns)[0], inplace=True)
     df.to_csv('centers_top100.csv')
-    df.to_csv('centers_top100_copy.csv')
+    try:
+        df.to_csv('centers_top100_copy.csv')
+    except:
+        pass
     print(f"{str(dt.datetime.today())[11:16]} CSV Saved")
 
 
