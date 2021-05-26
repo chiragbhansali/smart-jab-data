@@ -242,6 +242,7 @@ def cia(dict_1):
             continue
     if list(df.columns)[0] != "Center Name":
         df.drop(columns=list(df.columns)[0], inplace=True)
+    df = df.sort_values('District')
     df.to_csv('centers_top100.csv')
     try:
         df.to_csv('centers_top100_copy.csv')
