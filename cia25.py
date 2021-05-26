@@ -48,7 +48,6 @@ districts = {
     365: 'Nagpur',
     389: 'Nashik',
     392: 'Thane',
-    637: 'Bareilly',
 }
 
 min_age_limit = 18
@@ -135,6 +134,8 @@ def cia(dict_1):
 
                     # check if dose1 >= 10 and min_age_limit == 18
                     if session['available_capacity_dose1'] >= 10 and session["min_age_limit"] == 18:
+                        print(centers['centers'][c]['name'] +
+                                      " " + str(centers['centers'][c]['pincode']))
                         # Get type of cell
                         res = df.loc[df["Center ID"] == float(
                             center_id), date_session].apply(type)
@@ -146,8 +147,7 @@ def cia(dict_1):
                                 consecutiveSlot += 1
                             elif consecutiveSlot > 0:
                                 consecutiveSlot += 1
-                                print(centers['centers'][c]['name'] +
-                                      " " + str(centers['centers'][c]['pincode']))
+                                
                                 df.loc[df["Center ID"] == float(
                                     center_id), date_session] = 'Prev'
         except:
