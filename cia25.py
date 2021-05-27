@@ -79,16 +79,21 @@ def today() -> str:
 
 def cia(dict_1):
     # Read CSV
-    df = pd.read_csv('centers_top25.csv')
-    if list(df.columns)[0] != "Center Name":
-        df.drop(columns=list(df.columns)[0], inplace=True)
+    dfMain = pd.read_csv('centers_top25.csv')
+    dfHes = pd.read_csv('centers_top25_hesitancy.csv')
+    print(dfHes.columns)
+    print(dfMain.columns)
+    dfArr = [dfMain, dfHes]
+    # Remove first column in both dataframes (first column is index col created by pandas)
+    # if list(dfMain.columns)[0] != "Center Name":
+    #     dfMain.drop(columns=list(dfMain.columns)[0], inplace=True)
+    for df in dfArr:
+        if list(df.columns)[0] != "Center Name":
+            df.drop(columns=list(df.columns)[0], inplace=True)
 
     # Current time in format HH:MM
     now = str(dt.datetime.today())[11:16]
     # Start date
-    # date = '25-May'
-
-    # from 25th this will be the value of date
     date = str(dt.date.today().strftime('%d-%b'))
 
     # Initialize CoWin API
@@ -105,16 +110,68 @@ def cia(dict_1):
             print("API Rate Limit Exceeded!")
             continue
         # Loop through centers in the district
+
         for i in centers['centers']:
             # Get Center ID of the center
             center_id = i['center_id']
-            # If Center ID is not in the dataframe, add all its details
-            if (float(center_id) not in df["Center ID"]) and i["sessions"][0]["min_age_limit"] == 18:
-                test = pd.DataFrame({"Center Name": [i["name"]], "Center ID": [i["center_id"]], "District": [i["district_name"]], "District ID": [
-                                    district_id], "PIN Code": [i['pincode']], "Paid/Free": [i['fee_type']], "Minimum Age": ["18"], "Vaccine": [i["sessions"][0]['vaccine']]})
+            # print(json.dumps(i, indent=1))
+            # If Center ID is not in the dataframe, add all its details to main dataframe
+            if (float(center_id) not in dfMain["Center ID"]) and i["sessions"][0]["min_age_limit"] == 18:
+                test = pd.DataFrame(
+                    {
+                        "Center Name": [i["name"]],
+                        "Center ID": [i["center_id"]],
+                        "District": [i["district_name"]],
+                        "District ID": [district_id],
+                        "PIN Code": [i['pincode']],
+                        "Paid/Free": [i['fee_type']],
+                        "Minimum Age": ["18"],
+                        "Dose Capacity": ["0"],
+                        "Vaccine": [i["sessions"][0]['vaccine']]
+                    }
+                )
                 # Append new center row to df
-                df = df.append(test, ignore_index=True)
-                df.drop_duplicates(subset=['Center ID'], inplace=True)
+                dfMain = dfMain.append(test, ignore_index=True)
+                dfMain.drop_duplicates(subset=['Center ID'], inplace=True)
+
+            # Add all centers to hesitancy dataframe
+            if (float(center_id) not in dfHes["Center ID"]):
+                test = pd.DataFrame(
+                    {
+                        "Center Name": [i["name"]],
+                        "Center ID": [i["center_id"]],
+                        "District": [i["district_name"]],
+                        "District ID": [district_id],
+                        "PIN Code": [i['pincode']],
+                        "Paid/Free": [i['fee_type']],
+                        "Minimum Age": [i["sessions"][0]["min_age_limit"]],
+                        "Dose Capacity": ["0"],
+                        "Vaccine": [i["sessions"][0]['vaccine']]
+                    }
+                )
+                # Append new center row to df
+                dfHes = dfHes.append(test, ignore_index=True)
+                dfHes.drop_duplicates(subset=['Center ID'], inplace=True)
+            # Fill max dose capacity of center in main dataframe
+            if i["sessions"][0]["min_age_limit"] == 18:
+                doseCapacity = []
+                for session in i["sessions"]:
+                    doseCapacity.append(session["available_capacity"])
+                maxDC = max(doseCapacity)
+                currentCapacityDf = dfMain.loc[dfMain["Center ID"]
+                                               == float(center_id), "Dose Capacity"].item()
+                maxDoseCapacity = max(int(maxDC), int(currentCapacityDf))
+                dfMain.loc[dfMain["Center ID"] == float(
+                    center_id), "Dose Capacity"] = maxDoseCapacity
+            # doseCapacity = []
+            # for session in i["sessions"]:
+            #     doseCapacity.append(session["available_capacity"])
+            # maxDC = max(doseCapacity)
+            # currentCapacityDf = dfHes.loc[dfHes["Center ID"]
+            #                               == float(center_id), "Dose Capacity"].item()
+            # maxDoseCapacity = max(int(maxDC), int(currentCapacityDf))
+            # dfHes.loc[dfHes["Center ID"] == float(
+            #     center_id), "Dose Capacity"] = maxDoseCapacity
         try:
             # loop through centers in district
             for c in range(len(centers['centers'])):
@@ -134,30 +191,33 @@ def cia(dict_1):
 
                     # check if dose1 >= 10 and min_age_limit == 18
                     if session['available_capacity_dose1'] >= 10 and session["min_age_limit"] == 18:
-                        print(centers['centers'][c]['name'] +
-                                      " " + str(centers['centers'][c]['pincode']))
                         # Get type of cell
-                        res = df.loc[df["Center ID"] == float(
+                        res = dfMain.loc[dfMain["Center ID"] == float(
                             center_id), date_session].apply(type)
                         # check if type of cell is not str
                         if (res != str).bool():
                             if consecutiveSlot == 0:
-                                df.loc[df["Center ID"] ==
-                                       float(center_id), date_session] = now
+                                dfMain.loc[dfMain["Center ID"] ==
+                                           float(center_id), date_session] = now
                                 consecutiveSlot += 1
                             elif consecutiveSlot > 0:
                                 consecutiveSlot += 1
-                                
-                                df.loc[df["Center ID"] == float(
+                                print(centers['centers'][c]['name'] +
+                                      " " + str(centers['centers'][c]['pincode']))
+                                dfMain.loc[dfMain["Center ID"] == float(
                                     center_id), date_session] = 'Prev'
         except:
             continue
-    if list(df.columns)[0] != "Center Name":
-        df.drop(columns=list(df.columns)[0], inplace=True)
-
-    df.to_csv('centers_top25.csv')
+    if list(dfMain.columns)[0] != "Center Name":
+        dfMain.drop(columns=list(dfMain.columns)[0], inplace=True)
+    dfMain = dfMain.sort_values('District')
+    # dfHes = dfHes.sort_values('District')
+    dfMain.to_csv('centers_top25.csv')
+    print("Main CSV saved")
+    dfHes.to_csv('centers_top25_hesitancy.csv')
+    print("Hesitancy CSV saved")
     try:
-        df.to_csv('centers_top25_copy.csv')
+        dfMain.to_csv('centers_top25_copy.csv')
     except:
         pass
     print(f"{str(dt.datetime.today())[11:16]} CSV Saved")
