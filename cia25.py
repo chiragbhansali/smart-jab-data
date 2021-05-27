@@ -81,8 +81,6 @@ def cia(dict_1):
     # Read CSV
     dfMain = pd.read_csv('centers_top25.csv')
     dfHes = pd.read_csv('centers_top25_hesitancy.csv')
-    print(dfHes.columns)
-    print(dfMain.columns)
     dfArr = [dfMain, dfHes]
     # Remove first column in both dataframes (first column is index col created by pandas)
     # if list(dfMain.columns)[0] != "Center Name":
@@ -163,15 +161,19 @@ def cia(dict_1):
                 maxDoseCapacity = max(int(maxDC), int(currentCapacityDf))
                 dfMain.loc[dfMain["Center ID"] == float(
                     center_id), "Dose Capacity"] = maxDoseCapacity
-            # doseCapacity = []
-            # for session in i["sessions"]:
-            #     doseCapacity.append(session["available_capacity"])
-            # maxDC = max(doseCapacity)
-            # currentCapacityDf = dfHes.loc[dfHes["Center ID"]
-            #                               == float(center_id), "Dose Capacity"].item()
-            # maxDoseCapacity = max(int(maxDC), int(currentCapacityDf))
-            # dfHes.loc[dfHes["Center ID"] == float(
-            #     center_id), "Dose Capacity"] = maxDoseCapacity
+            if i["sessions"][0]["min_age_limit"] >= 18:
+                doseCapacity = []
+                for session in i["sessions"]:
+                    doseCapacity.append(session["available_capacity"])
+                maxDC = max(doseCapacity)
+                try:
+                    currentCapacityDf = dfHes.loc[dfHes["Center ID"]
+                                                == float(center_id), "Dose Capacity"].item()
+                except:
+                    print(f"Error in adding dose capacity to hesitancy csv {i['center_id']} {i['name']}")
+                maxDoseCapacity = max(int(maxDC), int(currentCapacityDf))
+                dfHes.loc[dfHes["Center ID"] == float(
+                    center_id), "Dose Capacity"] = maxDoseCapacity
         try:
             # loop through centers in district
             for c in range(len(centers['centers'])):
@@ -206,6 +208,12 @@ def cia(dict_1):
                                       " " + str(centers['centers'][c]['pincode']))
                                 dfMain.loc[dfMain["Center ID"] == float(
                                     center_id), date_session] = 'Prev'
+                    # if dose capacity is greater than 10, add time to 5min
+                    if session['available_capacity_dose1'] >= 10:
+                        currentMin = int(dfHes.loc[dfHes["Center ID"] == float(center_id), date_session].item())
+                        dfHes.loc[dfHes["Center ID"] == float(center_id), date_session] = currentMin + 5
+                        
+
         except:
             continue
     if list(dfMain.columns)[0] != "Center Name":
