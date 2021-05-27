@@ -5,11 +5,11 @@ import datetime as dt
 import time
 import schedule
 import threading
+import json
 
 # import random
 # import proxyscrape
 # import requests
-# import json
 # from fake_useragent import UserAgent
 # from requests.exceptions import HTTPError
 
@@ -194,16 +194,40 @@ def cia(dict_1):
             print("API Rate Limit Exceeded!")
             continue
         # Loop through centers in the district
+
         for i in centers['centers']:
             # Get Center ID of the center
             center_id = i['center_id']
+            # print(json.dumps(i, indent=1))
             # If Center ID is not in the dataframe, add all its details
             if (float(center_id) not in df["Center ID"]) and i["sessions"][0]["min_age_limit"] == 18:
-                test = pd.DataFrame({"Center Name": [i["name"]], "Center ID": [i["center_id"]], "District": [i["district_name"]], "District ID": [
-                                    district_id], "PIN Code": [i['pincode']], "Paid/Free": [i['fee_type']], "Minimum Age": ["18"], "Vaccine": [i["sessions"][0]['vaccine']]})
+                test = pd.DataFrame(
+                    {
+                        "Center Name": [i["name"]],
+                        "Center ID": [i["center_id"]],
+                        "District": [i["district_name"]],
+                        "District ID": [district_id],
+                        "PIN Code": [i['pincode']],
+                        "Paid/Free": [i['fee_type']],
+                        "Minimum Age": ["18"],
+                        "Dose Capacity": ["0"],
+                        "Vaccine": [i["sessions"][0]['vaccine']]
+                    }
+                )
                 # Append new center row to df
                 df = df.append(test, ignore_index=True)
                 df.drop_duplicates(subset=['Center ID'], inplace=True)
+            # Fill max dose capacity of center
+            if i["sessions"][0]["min_age_limit"] == 18:
+                doseCapacity = []
+                for session in i["sessions"]:
+                    doseCapacity.append(session["available_capacity"])
+                maxDC = max(doseCapacity)
+                currentCapacityDf = df.loc[df["Center ID"]
+                                           == float(center_id), "Dose Capacity"].item()
+                maxDoseCapacity = max(int(maxDC), int(currentCapacityDf))
+                df.loc[df["Center ID"] == float(
+                    center_id), "Dose Capacity"] = maxDoseCapacity
         try:
             # loop through centers in district
             for c in range(len(centers['centers'])):
