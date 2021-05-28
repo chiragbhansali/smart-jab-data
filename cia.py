@@ -6,6 +6,7 @@ import time
 import schedule
 import threading
 import json
+import threading
 
 # import random
 # import proxyscrape
@@ -144,10 +145,11 @@ StartTime = time.time()
 
 
 class setInterval:
-    def __init__(self, interval, action):
+    def __init__(self, interval, action, param):
         self.interval = interval
         self.action = action
         self.stopEvent = threading.Event()
+        self.param = param
         thread = threading.Thread(target=self.__setInterval)
         thread.start()
 
@@ -155,7 +157,7 @@ class setInterval:
         nextTime = time.time()+self.interval
         while not self.stopEvent.wait(nextTime-time.time()):
             nextTime += self.interval
-            self.action()
+            self.action(self.param)
 
     def cancel(self):
         self.stopEvent.set()
@@ -168,13 +170,14 @@ def today() -> str:
 def cia(dict_1):
     # Read CSV
     dfMain = pd.read_csv('centers_top100.csv')
-    # dfHes = pd.read_csv('centers_top100_hesitancy.csv')
+    dfHes = pd.read_csv('centers_top100_hesitancy.csv')
+    dfArr = [dfMain, dfHes]
     # Remove first column in both dataframes (first column is index col created by pandas)
-    if list(dfMain.columns)[0] != "Center Name":
-        dfMain.drop(columns=list(dfMain.columns)[0], inplace=True)
-    # for df in [dfMain, dfHes]:
-    #     if list(df.columns)[0] != "Center Name":
-    #         df.drop(columns=list(df.columns)[0], inplace=True)
+    # if list(dfMain.columns)[0] != "Center Name":
+    #     dfMain.drop(columns=list(dfMain.columns)[0], inplace=True)
+    for df in dfArr:
+        if list(df.columns)[0] != "Center Name":
+            df.drop(columns=list(df.columns)[0], inplace=True)
 
     # Current time in format HH:MM
     now = str(dt.datetime.today())[11:16]
@@ -220,23 +223,23 @@ def cia(dict_1):
                 dfMain.drop_duplicates(subset=['Center ID'], inplace=True)
 
             # Add all centers to hesitancy dataframe
-            # if (float(center_id) not in dfHes["Center ID"]):
-            #     test = pd.DataFrame(
-            #         {
-            #             "Center Name": [i["name"]],
-            #             "Center ID": [i["center_id"]],
-            #             "District": [i["district_name"]],
-            #             "District ID": [district_id],
-            #             "PIN Code": [i['pincode']],
-            #             "Paid/Free": [i['fee_type']],
-            #             "Minimum Age": [i["sessions"][0]["min_age_limit"]],
-            #             "Dose Capacity": ["0"],
-            #             "Vaccine": [i["sessions"][0]['vaccine']]
-            #         }
-            #     )
-            #     # Append new center row to df
-            #     dfHes = dfHes.append(test, ignore_index=True)
-            #     dfHes.drop_duplicates(subset=['Center ID'], inplace=True)
+            if (float(center_id) not in dfHes["Center ID"]):
+                test = pd.DataFrame(
+                    {
+                        "Center Name": [i["name"]],
+                        "Center ID": [i["center_id"]],
+                        "District": [i["district_name"]],
+                        "District ID": [district_id],
+                        "PIN Code": [i['pincode']],
+                        "Paid/Free": [i['fee_type']],
+                        "Minimum Age": [i["sessions"][0]["min_age_limit"]],
+                        "Dose Capacity": ["0"],
+                        "Vaccine": [i["sessions"][0]['vaccine']]
+                    }
+                )
+                # Append new center row to df
+                dfHes = dfHes.append(test, ignore_index=True)
+                dfHes.drop_duplicates(subset=['Center ID'], inplace=True)
             # Fill max dose capacity of center in main dataframe
             if i["sessions"][0]["min_age_limit"] == 18:
                 doseCapacity = []
@@ -248,15 +251,20 @@ def cia(dict_1):
                 maxDoseCapacity = max(int(maxDC), int(currentCapacityDf))
                 dfMain.loc[dfMain["Center ID"] == float(
                     center_id), "Dose Capacity"] = maxDoseCapacity
-            # doseCapacity = []
-            # for session in i["sessions"]:
-            #     doseCapacity.append(session["available_capacity"])
-            # maxDC = max(doseCapacity)
-            # currentCapacityDf = dfHes.loc[dfHes["Center ID"]
-            #                               == float(center_id), "Dose Capacity"].item()
-            # maxDoseCapacity = max(int(maxDC), int(currentCapacityDf))
-            # dfHes.loc[dfHes["Center ID"] == float(
-            #     center_id), "Dose Capacity"] = maxDoseCapacity
+            if i["sessions"][0]["min_age_limit"] >= 18:
+                doseCapacity = []
+                for session in i["sessions"]:
+                    doseCapacity.append(session["available_capacity"])
+                maxDC = max(doseCapacity)
+                try:
+                    currentCapacityDf = dfHes.loc[dfHes["Center ID"]
+                                                  == float(center_id), "Dose Capacity"].item()
+                except:
+                    pass
+                    # print(f"Error in adding dose capacity to hesitancy csv {i['center_id']} {i['name']")
+                maxDoseCapacity = max(int(maxDC), int(currentCapacityDf))
+                dfHes.loc[dfHes["Center ID"] == float(
+                    center_id), "Dose Capacity"] = maxDoseCapacity
         try:
             # loop through centers in district
             for c in range(len(centers['centers'])):
@@ -291,15 +299,19 @@ def cia(dict_1):
                                       " " + str(centers['centers'][c]['pincode']))
                                 dfMain.loc[dfMain["Center ID"] == float(
                                     center_id), date_session] = 'Prev'
+                    if session['available_capacity_dose1'] >= 10:
+                        currentMin = int(
+                            dfHes.loc[dfHes["Center ID"] == float(center_id), date_session].item())
+                        dfHes.loc[dfHes["Center ID"] == float(
+                            center_id), date_session] = currentMin + 5
         except:
             continue
-    if list(dfMain.columns)[0] != "Center Name":
-        dfMain.drop(columns=list(dfMain.columns)[0], inplace=True)
+
     dfMain = dfMain.sort_values('District')
-    # dfHes = dfHes.sort_values('District')
+    dfHes = dfHes.sort_values('District')
     dfMain.to_csv('centers_top100.csv')
     print("Main CSV saved")
-    # dfHes.to_csv('centers_top100_hesitancy.csv')
+    dfHes.to_csv('centers_top100_hesitancy.csv')
     print("Hesitancy CSV saved")
     try:
         dfMain.to_csv('centers_top100_copy.csv')
@@ -309,11 +321,25 @@ def cia(dict_1):
 
 
 cia(districts)
+
+# Set Interval till 23:30 pm
+
+s1 = dt.datetime.today()
+s2 = dt.datetime.today()
+nt = s2.replace(hour=23, minute=30)
+
+secondsTo23_30 = (nt - s1).total_seconds()
+
+inter = setInterval(300, cia, districts)
+print("Interval Started")
+t = threading.Timer(secondsTo23_30, inter.cancel)
+t.start()
+
 # Scheduler
-print("scheduler start")
-schedule.every(5).minutes.until("23:30").do(cia, dict_1=districts)
-timenow = str(dt.datetime.today())[11:16]
-while timenow != "23:31":
-    schedule.run_pending()
-    time.sleep(1)
-    timenow = str(dt.datetime.today())[11:16]
+# print("scheduler start")
+# schedule.every(210).seconds.until("23:30").do(cia, dict_1=districts)
+# timenow = str(dt.datetime.today())[11:16]
+# while timenow != "23:31":
+#     schedule.run_pending()
+#     time.sleep(1)
+#     timenow = str(dt.datetime.today())[11:16]
