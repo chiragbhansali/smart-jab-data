@@ -197,6 +197,8 @@ def cia(dict_1):
         except TypeError:
             print("API Rate Limit Exceeded!")
             continue
+        except:
+            continue
         # Loop through centers in the district
 
         for i in centers['centers']:
@@ -310,11 +312,10 @@ def cia(dict_1):
     dfMain = dfMain.sort_values('District')
     dfHes = dfHes.sort_values('District')
     dfMain.to_csv('centers_top100.csv')
-    print("Main CSV saved")
     dfHes.to_csv('centers_top100_hesitancy.csv')
-    print("Hesitancy CSV saved")
     try:
         dfMain.to_csv('centers_top100_copy.csv')
+        dfHes.to_csv('centers_top100_hesitancy_copy.csv')
     except:
         pass
     print(f"{str(dt.datetime.today())[11:16]} CSV Saved")
@@ -330,7 +331,7 @@ nt = s2.replace(hour=23, minute=30)
 
 secondsTo23_30 = (nt - s1).total_seconds()
 
-inter = setInterval(300, cia, districts)
+inter = setInterval(315, cia, districts)
 print("Interval Started")
 t = threading.Timer(secondsTo23_30, inter.cancel)
 t.start()
