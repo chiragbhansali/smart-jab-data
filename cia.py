@@ -302,6 +302,8 @@ def cia(dict_1):
                                 dfMain.loc[dfMain["Center ID"] == float(
                                     center_id), date_session] = 'Prev'
                     if session['available_capacity_dose1'] >= 10:
+                        if dfHes.loc[dfHes["Center ID"] == float(center_id), date_session].isnull().item():
+                            dfHes.loc[dfHes["Center ID"] == float(center_id), date_session] = 0
                         currentMin = int(
                             dfHes.loc[dfHes["Center ID"] == float(center_id), date_session].item())
                         dfHes.loc[dfHes["Center ID"] == float(
