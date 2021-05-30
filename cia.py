@@ -214,6 +214,7 @@ def cia(dict_1):
                         "District": [i["district_name"]],
                         "District ID": [district_id],
                         "PIN Code": [i['pincode']],
+                        "State": [i['state_name']],
                         "Paid/Free": [i['fee_type']],
                         "Minimum Age": ["18"],
                         "Dose Capacity": ["0"],
@@ -233,6 +234,7 @@ def cia(dict_1):
                         "District": [i["district_name"]],
                         "District ID": [district_id],
                         "PIN Code": [i['pincode']],
+                        "State": [i['state_name']],
                         "Paid/Free": [i['fee_type']],
                         "Minimum Age": [i["sessions"][0]["min_age_limit"]],
                         "Dose Capacity": ["0"],
@@ -244,6 +246,10 @@ def cia(dict_1):
                 dfHes.drop_duplicates(subset=['Center ID'], inplace=True)
             # Fill max dose capacity of center in main dataframe
             if i["sessions"][0]["min_age_limit"] == 18:
+                # Add state name
+                if dfMain.loc[dfMain["Center ID"] == float(center_id), "State"].isnull().item():
+                    dfMain.loc[dfMain["Center ID"] == float(center_id), "State"] = i['state_name']
+
                 doseCapacity = []
                 for session in i["sessions"]:
                     doseCapacity.append(session["available_capacity"])
@@ -261,12 +267,17 @@ def cia(dict_1):
                 try:
                     currentCapacityDf = dfHes.loc[dfHes["Center ID"]
                                                   == float(center_id), "Dose Capacity"].item()
+                    # Add state name
+                    if dfHes.loc[dfHes["Center ID"] == float(center_id), "State"].isnull().item():
+                        dfHes.loc[dfHes["Center ID"] == float(center_id), "State"] = i['state_name']
                 except:
                     pass
                     # print(f"Error in adding dose capacity to hesitancy csv {i['center_id']} {i['name']")
                 maxDoseCapacity = max(int(maxDC), int(currentCapacityDf))
                 dfHes.loc[dfHes["Center ID"] == float(
                     center_id), "Dose Capacity"] = maxDoseCapacity
+
+
         try:
             # loop through centers in district
             for c in range(len(centers['centers'])):
