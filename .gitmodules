@@ -1,0 +1,3 @@
+[submodule "smart-jab-database"]
+	path = smart-jab-database
+	url = https://github.com/chiragbhansali/smart-jab-database.git
