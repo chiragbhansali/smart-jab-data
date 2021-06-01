@@ -317,8 +317,8 @@ def cia(dict_1):
         except:
             continue
 
-    dfMain = dfMain.sort_values('District')
-    dfHes = dfHes.sort_values('District')
+    dfMain = dfMain.sort_values(["State", "District"], ascending=(True, True))
+    dfHes = dfHes.sort_values(["State", "District"], ascending=(True, True))
     dfMain.to_csv('centers_top100.csv')
     dfHes.to_csv('centers_top100_hesitancy.csv')
     try:
