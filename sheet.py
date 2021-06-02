@@ -1,5 +1,6 @@
 import gspread
 import pandas as pd
+import numpy as np
 import datetime as dt
 import time
 import threading
@@ -9,50 +10,67 @@ gc = gspread.service_account(filename='./cowin-data-a3988c41e946.json')
 sh = gc.open("Top 100 Center DB")
 dfMain = pd.read_csv('centers_top100_copy.csv')
 dfHes = pd.read_csv('centers_top100_hesitancy_copy.csv')
-worksheet_Main = sh.get_worksheet(0)
-worksheet_Hes = sh.get_worksheet(1)
-dfUpdateMain = dfMain.fillna('')
-dfUpdateHes = dfHes.fillna('')
-dfWorkMain = pd.DataFrame(worksheet_Main.get_all_records())
-dfWorkHes = pd.DataFrame(worksheet_Hes.get_all_records())
+dfArr = [dfMain, dfHes]
+for df in dfArr:
+    if list(df.columns)[0] != "Center Name":
+        df.drop(columns=list(df.columns)[0], inplace=True)
+dfMain = dfMain.fillna('')
+dfHes = dfHes.fillna('')
 
-z = len(dfWorkMain)+2
-for i in dfUpdateMain.index:
-    row = dfUpdateMain.loc[i]
-    if (row['Center ID']) not in list(dfWorkMain['Center ID']):
-        bar=pd.DataFrame(columns=list(dfWorkMain.columns))
+worksheet_main = sh.get_worksheet(0)
+worksheet_hes = sh.get_worksheet(1)
+dfSheetMain = pd.DataFrame(worksheet_main.get_all_records())
+dfSheetHes = pd.DataFrame(worksheet_hes.get_all_records())
+
+sheetUpdateCount = 0
+
+# Adding centers in main df
+print("Adding centers in main df")
+z = len(dfSheetMain)+2
+for i in dfMain.index:
+    row = dfMain.loc[i]
+    if (row['Center ID']) not in list(dfSheetMain['Center ID']):
+        bar=pd.DataFrame(columns=list(dfSheetMain.columns))
         bar = bar.append(row, ignore_index=True)
-        cell_list = worksheet_Main.range(('A'+str(z)+':'+'FL'+str(z)))
-
+        bar = bar.fillna('')
+        cell_list = worksheet_main.range(('A'+str(z)+':'+'FO'+str(z)))
+        # bar.fillna('', inplace=True)
         for j in range(len(cell_list)):
-            if type(bar.loc[0].values[j]) == float:
+            upd = bar.loc[0].values[j]
+            if type(bar.loc[0].values[j]) != str:
                 bar.loc[0].values[j] = int(bar.loc[0].values[j])
-            upd = (bar.loc[0].values[j])
+                upd = np.uint32(int(bar.loc[0].values[j])).item()
             cell_list[j].value = upd
-        worksheet_Main.update_cells(cell_list)
+        print("Sheet Update Count in Main DF", sheetUpdateCount)
+        if sheetUpdateCount == 59:
+            print("time out taken")
+            time.sleep(62) # pause code execution for a minute
+            sheetUpdateCount = 0
+        worksheet_main.update_cells(cell_list)
+        sheetUpdateCount += 1
         z+=1
 
-y = len(dfWorkHes)+2
-for i in dfUpdateHes.index:
-    row = dfUpdateHes.loc[i]
-    if (row['Center ID']) not in list(dfWorkHes['Center ID']):
-        bar=pd.DataFrame(columns=list(dfWorkHes.columns))
+# Adding centers in hesitancy df
+print("Adding centers in hesitancy df")
+y = len(dfSheetHes)+2
+for i in dfHes.index:
+    row = dfHes.loc[i]
+    if (row['Center ID']) not in list(dfSheetHes['Center ID']):
+        bar=pd.DataFrame(columns=list(dfSheetHes.columns))
         bar = bar.append(row, ignore_index=True)
-        cell_list = worksheet_Hes.range(('A'+str(z)+':'+'FL'+str(z)))
+        cell_list = worksheet_hes.range(('A'+str(y)+':'+'FM'+str(y)))
 
         for j in range(len(cell_list)):
             if type(bar.loc[0].values[j]) == float:
-                print(bar.loc[0])
-                print(j)
-                abcd = []
-                for abc in bar.loc[0].values:
-                    abcd.append(pd.isna(bar.loc[0].values[j]))
-                print(abcd)
-                print(bar.loc[0].values)
                 bar.loc[0].values[j] = int(bar.loc[0].values[j])
             upd = (bar.loc[0].values[j])
             cell_list[j].value = upd
-        worksheet_Hes.update_cells(cell_list)
+        if sheetUpdateCount == 59:
+            print("time out taken")
+            time.sleep(62) # pause code execution for a minute
+            sheetUpdateCount = 0
+        worksheet_hes.update_cells(cell_list)
+        sheetUpdateCount += 1
         y+=1
 
 sh_columns=[]
@@ -67,24 +85,27 @@ sheet_columns = sh_columns[0:n]
 list_dates_columns = [list_dates, sheet_columns]
 date_dict = {list_dates_columns[0][i]: list_dates_columns[1][i] for i in range(0, len(list_dates_columns[0]))}
 
-mainDfUpdateCount = 0
-for i in dfWorkMain.index:
+print("Start updating values in main df")
+
+for i in dfSheetMain.index:
     today = dt.date.today()
-    for j in range(0,7):
+    for j in range(-1,6):
         date = str(today + dt.timedelta(j))
         date = dt.datetime.strptime(date, '%Y-%m-%d')
         date = dt.datetime.strftime(date, '%d-%b')
-        if mainDfUpdateCount == 100:
-            time.sleep(110)
-            mainDfUpdateCount = 0
-        if dfUpdateMain.loc[i, date]!= '':
-            if dfUpdateMain.loc[i, date]!= dfWorkMain.loc[i, date]:
-                mainDfUpdateCount += 1
+        if dfMain.loc[i, date]!= '':
+            if dfMain.loc[i, date]!= dfSheetMain.loc[i, date]:
                 cell_index = date_dict[date]+str(i+2)
                 print(cell_index)
-                value = dfUpdateMain.loc[i, date]
+                value = dfMain.loc[i, date]
                 print(value)
-                worksheet_Main.update(cell_index, value)
+                if sheetUpdateCount == 59:
+                    print("time out taken")
+                    time.sleep(62) # pause code execution for a minute
+                    sheetUpdateCount = 0
+                worksheet_main.update(cell_index, value)
+                sheetUpdateCount += 1
+                print(sheetUpdateCount)
 
 sh_columns=[]
 n = len(dfHes.columns)
@@ -98,18 +119,23 @@ sheet_columns = sh_columns[0:n]
 list_dates_columns = [list_dates, sheet_columns]
 date_dict = {list_dates_columns[0][i]: list_dates_columns[1][i] for i in range(0, len(list_dates_columns[0]))}
 
-for i in dfWorkHes.index:
+print("Start updating values in hes df")
+for i in dfSheetHes.index:
     today = dt.date.today()
-    for j in range(0,7):
+    for j in range(-1,6):
         date = str(today + dt.timedelta(j))
         date = dt.datetime.strptime(date, '%Y-%m-%d')
         date = dt.datetime.strftime(date, '%d-%b')
-        if dfUpdateHes.loc[i, date]!= '':
-            if dfUpdateHes.loc[i, date]!= dfWorkHes.loc[i, date]:
+        if dfHes.loc[i, date]!= '':
+            if dfHes.loc[i, date]!= dfSheetHes.loc[i, date]:
                 cell_index = date_dict[date]+str(i+2)
                 print(cell_index)
-                value = dfUpdateHes.loc[i, date]
+                value = dfHes.loc[i, date]
                 print(value)
-                worksheet_Hes.update(cell_index, value)
-            
-            
+                if sheetUpdateCount == 59:
+                    print("time out taken")
+                    time.sleep(62) # pause code execution for a minute
+                    sheetUpdateCount = 0
+                worksheet_hes.update(cell_index, value)
+                sheetUpdateCount += 1
+                print(sheetUpdateCount)
