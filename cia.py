@@ -8,24 +8,15 @@ import threading
 import json
 import threading
 
-# import random
-# import proxyscrape
-# import requests
-# from fake_useragent import UserAgent
-# from requests.exceptions import HTTPError
-
 # Make dictionary of district IDs and district names
 districts = {
     5: 'Guntur',
     4: 'Krishna',
-    #  7: 'Kurnool',
-    #  13: 'Sri Potti Sriramulu Nellore',
     8: 'Visakhapatnam',
     49: 'Kamrup Metropolitan',
     77: 'Aurangabad',
     97: 'Patna',
     108: 'Chandigarh',
-    #  119: 'Durg',
     109: 'Raipur',
     141: 'Central Delhi',
     145: 'East Delhi',
@@ -52,7 +43,6 @@ districts = {
     777: 'Vadodara Corporation',
     199: 'Faridabad',
     188: 'Gurgaon',
-    #     230: 'Jammu',
     220: 'Srinagar',
     257: 'Dhanbad',
     247: 'East Singhbhum',
@@ -60,10 +50,8 @@ districts = {
     276: 'Bangalore Rural',
     265: 'Bangalore Urban',
     294: 'BBMP',
-    #     264: 'Belgaum',
     269: 'Dakshina Kannada',
     278: 'Dharwad',
-    # 267: 'Gulbarga',
     266: 'Mysore',
     307: 'Ernakulam',
     296: 'Thiruvananthapuram',
@@ -71,7 +59,6 @@ districts = {
     313: 'Gwalior',
     314: 'Indore',
     315: 'Jabalpur',
-    #     318: 'Ujjain',
     364: 'Akola',
     366: 'Amravati',
     390: 'Jalgaon',
@@ -87,11 +74,9 @@ districts = {
     392: 'Thane',
     457: 'Cuttack',
     446: 'Khurda',
-    #     453: 'Sundargarh',
     485: 'Amritsar',
     492: 'Jalandhar',
     488: 'Ludhiana',
-    # 507: 'Ajmer',
     501: 'Bikaner',
     505: 'Jaipur I',
     506: 'Jaipur II',
@@ -99,7 +84,6 @@ districts = {
     503: 'Kota',
     571: 'Chennai',
     539: 'Coimbatore',
-    #     563: 'Erode',
     540: 'Madurai',
     545: 'Salem',
     560: 'Tiruchirappalli',
@@ -110,24 +94,17 @@ districts = {
     622: 'Agra',
     623: 'Aligarh',
     637: 'Bareilly',
-    #     649: 'Firozabad',
     650: 'Gautam Buddha Nagar',
     651: 'Ghaziabad',
-    #     654: 'Gorakhpur',
-    #     661: 'Jhansi',
     663: 'Kanpur Dehat',
     664: 'Kanpur Nagar',
     670: 'Lucknow',
     676: 'Meerut',
-    #     678: 'Moradabad',
     624: 'Prayagraj',
-    # 684: 'Saharanpur',
     696: 'Varanasi',
     697: 'Dehradun',
     717: 'Darjeeling',
-    #     719: 'East Bardhaman',
     721: 'Howrah',
-    # 722: 'Jalpaiguri',
     725: 'Kolkata'
 }
 
