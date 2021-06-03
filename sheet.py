@@ -41,7 +41,7 @@ for i in dfMain.index:
                 bar.loc[0].values[j] = int(bar.loc[0].values[j])
                 upd = np.uint32(int(bar.loc[0].values[j])).item()
             cell_list[j].value = upd
-        print("Sheet Update Count in Main DF", sheetUpdateCount)
+        # print("Sheet Update Count in Main DF", sheetUpdateCount)
         if sheetUpdateCount == 59:
             print("time out taken")
             time.sleep(62) # pause code execution for a minute
@@ -89,23 +89,25 @@ print("Start updating values in main df")
 
 for i in dfSheetMain.index:
     today = dt.date.today()
+    center_id = dfMain.loc[i, "Center ID"]
     for j in range(-1,6):
         date = str(today + dt.timedelta(j))
         date = dt.datetime.strptime(date, '%Y-%m-%d')
         date = dt.datetime.strftime(date, '%d-%b')
-        if dfMain.loc[i, date]!= '':
-            if dfMain.loc[i, date]!= dfSheetMain.loc[i, date]:
-                cell_index = date_dict[date]+str(i+2)
-                print(cell_index)
-                value = dfMain.loc[i, date]
-                print(value)
+        if dfMain.loc[dfMain["Center ID"] == float(center_id), date].item() != '' and (not (dfMain.loc[dfMain["Center ID"] == float(center_id), date].isnull().item())):
+            if dfSheetMain.loc[dfSheetMain["Center ID"] == float(center_id), date].empty:
+                print("in the na block")
+                dfSheetMain.loc[dfSheetMain["Center ID"] == float(center_id), date] = 0
+            if dfMain.loc[dfMain["Center ID"] == float(center_id), date].item() != dfSheetMain.loc[dfSheetMain["Center ID"] == float(center_id), date].item():
+                cellIndexRel = dfSheetMain.index[dfSheetMain["Center ID"] == float(center_id)].tolist()[0]
+                cell_index = date_dict[date]+str(cellIndexRel+2)
+                value = dfMain.loc[dfMain["Center ID"] == float(center_id), date].item()
                 if sheetUpdateCount == 59:
                     print("time out taken")
                     time.sleep(62) # pause code execution for a minute
                     sheetUpdateCount = 0
                 worksheet_main.update(cell_index, value)
                 sheetUpdateCount += 1
-                print(sheetUpdateCount)
 
 sh_columns=[]
 n = len(dfHes.columns)
@@ -122,20 +124,19 @@ date_dict = {list_dates_columns[0][i]: list_dates_columns[1][i] for i in range(0
 print("Start updating values in hes df")
 for i in dfSheetHes.index:
     today = dt.date.today()
+    center_id = dfHes.loc[i, "Center ID"]
     for j in range(-1,6):
         date = str(today + dt.timedelta(j))
         date = dt.datetime.strptime(date, '%Y-%m-%d')
         date = dt.datetime.strftime(date, '%d-%b')
-        if dfHes.loc[i, date]!= '':
-            if dfHes.loc[i, date]!= dfSheetHes.loc[i, date]:
-                cell_index = date_dict[date]+str(i+2)
-                print(cell_index)
-                value = dfHes.loc[i, date]
-                print(value)
+        if dfHes.loc[dfHes["Center ID"] == float(center_id), date].item() != '':
+            if dfHes.loc[dfHes["Center ID"] == float(center_id), date].item() != dfSheetHes.loc[dfSheetHes["Center ID"] == float(center_id), date].item():
+                cellIndexRel = dfSheetHes.index[dfSheetHes["Center ID"] == float(center_id)].tolist()[0]
+                cell_index = date_dict[date]+str(cellIndexRel+2)
+                value = dfHes.loc[dfHes["Center ID"] == float(center_id), date].item()
                 if sheetUpdateCount == 59:
                     print("time out taken")
                     time.sleep(62) # pause code execution for a minute
                     sheetUpdateCount = 0
                 worksheet_hes.update(cell_index, value)
                 sheetUpdateCount += 1
-                print(sheetUpdateCount)
