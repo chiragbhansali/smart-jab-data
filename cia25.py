@@ -220,7 +220,7 @@ try:
                             currentMin = int(
                                 dfHes.loc[dfHes["Center ID"] == float(center_id), date_session].item())
                             dfHes.loc[dfHes["Center ID"] == float(
-                                center_id), date_session] = currentMin + 5
+                                center_id), date_session] = currentMin + 1.25
             except:
                 continue
 
