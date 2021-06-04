@@ -51,10 +51,11 @@ StartTime = time.time()
 
 
 class setInterval:
-    def __init__(self, interval, action):
+    def __init__(self, interval, action, param):
         self.interval = interval
         self.action = action
         self.stopEvent = threading.Event()
+        self.param = param
         thread = threading.Thread(target=self.__setInterval)
         thread.start()
 
@@ -62,7 +63,7 @@ class setInterval:
         nextTime = time.time()+self.interval
         while not self.stopEvent.wait(nextTime-time.time()):
             nextTime += self.interval
-            self.action()
+            self.action(self.param)
 
     def cancel(self):
         self.stopEvent.set()
