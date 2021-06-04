@@ -71,13 +71,13 @@ class setInterval:
 def today() -> str:
     return dt.datetime.now().strftime("%d-%m-%Y")
 
-
+folder = "./data/store/25"
 
 try:
     def cia(dict_1):
         # Read CSV
-        dfMain = pd.read_csv('centers_top25.csv')
-        dfHes = pd.read_csv('centers_top25_hesitancy.csv')
+        dfMain = pd.read_csv(f"{folder}/centers_top25.csv")
+        dfHes = pd.read_csv(f"{folder}/centers_top25_hesitancy.csv")
         dfArr = [dfMain, dfHes]
         # Remove first column in both dataframes (first column is index col created by pandas)
         # if list(dfMain.columns)[0] != "Center Name":
@@ -225,11 +225,11 @@ try:
 
         dfMain = dfMain.sort_values(["State", "District"], ascending=(True, True))
         dfHes = dfHes.sort_values(["State", "District"], ascending=(True, True))
-        dfMain.to_csv('centers_top25.csv')
-        dfHes.to_csv('centers_top25_hesitancy.csv')
+        dfMain.to_csv(f"{folder}/centers_top25.csv")
+        dfHes.to_csv(f"{folder}/centers_top25_hesitancy.csv")
         try:
-            dfMain.to_csv('centers_top25_copy.csv')
-            dfHes.to_csv('centers_top25_hesitancy_copy.csv')
+            dfMain.to_csv(f"{folder}/centers_top25_copy.csv")
+            dfHes.to_csv(f"{folder}/centers_top25_hesitancy_copy.csv")
         except:
             pass
         print(f"{str(dt.datetime.today())[11:16]} CSV Saved")
@@ -249,11 +249,11 @@ try:
     t = threading.Timer(secondsTo23_30, inter.cancel)
     t.start()
 
-    def sheetUpload(file):
+    def sheetUpload(csvName):
         gc = gspread.service_account(filename='./clientapi.json')
         sh = gc.open("Top 100 Center DB")
-        dfMain = pd.read_csv(f"{file}_copy.csv")
-        dfHes = pd.read_csv(F"{file}_hesitancy_copy.csv")
+        dfMain = pd.read_csv(f"{folder}/{csvName}_copy.csv")
+        dfHes = pd.read_csv(F"{folder}{csvName}_hesitancy_copy.csv")
         dfArr = [dfMain, dfHes]
         for df in dfArr:
             if list(df.columns)[0] != "Center Name":
@@ -385,7 +385,7 @@ try:
                         sheetUpdateCount += 1
 
     print("scheduler started for google sheet")
-    schedule.every().day.at("22:00").do(sheetUpload, file="center_top25")
+    schedule.every().day.at("22:00").do(sheetUpload, csvName="centers_top25")
     timenow = str(dt.datetime.today())[11:16]
     while timenow != "23:31":
         schedule.run_pending()
