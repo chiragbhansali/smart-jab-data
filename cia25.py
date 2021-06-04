@@ -253,7 +253,7 @@ try:
         gc = gspread.service_account(filename='./clientapi.json')
         sh = gc.open("Top 100 Center DB")
         dfMain = pd.read_csv(f"{folder}/{csvName}_copy.csv")
-        dfHes = pd.read_csv(F"{folder}{csvName}_hesitancy_copy.csv")
+        dfHes = pd.read_csv(F"{folder}/{csvName}_hesitancy_copy.csv")
         dfArr = [dfMain, dfHes]
         for df in dfArr:
             if list(df.columns)[0] != "Center Name":
