@@ -157,7 +157,7 @@ def today() -> str:
 try:
     def cia(dict_1):
         # Read CSV
-        dfMain = pd.read_csv('centers_top100.csv')
+        dfMain = pd.read_csv('centers_top100.csv', dtype={12: object})
         dfHes = pd.read_csv('centers_top100_hesitancy.csv')
         dfArr = [dfMain, dfHes]
         # Remove first column in both dataframes (first column is index col created by pandas)
@@ -190,6 +190,7 @@ try:
                 print("API Rate Limit Exceeded!")
                 continue
             except:
+                print("Error in API Calls")
                 continue
             # Loop through centers in the district
 
@@ -199,8 +200,13 @@ try:
                 # Get Center ID of the center
                 center_id = i['center_id']
                 # print(json.dumps(i, indent=1))
+                ifAge18Exists = False
+                for session in i["sessions"]:
+                    if session["min_age_limit"] == 18:
+                        ifAge18Exists = True
+                        break
                 # If Center ID is not in the dataframe, add all its details to main dataframe
-                if (float(center_id) not in dfMain["Center ID"]) and i["sessions"][0]["min_age_limit"] == 18:
+                if (float(center_id) not in dfMain["Center ID"]) and ifAge18Exists:
                     test = pd.DataFrame(
                         {
                             "Center Name": [i["name"]],
@@ -218,6 +224,11 @@ try:
                     # Append new center row to df
                     dfMain = dfMain.append(test, ignore_index=True)
                     dfMain.drop_duplicates(subset=['Center ID'], inplace=True)
+
+                # ageList = []
+                # for session in i["sessions"]:
+                #     if not (int(session["min_age_limit"]) in ageList):
+                #         ageList.append(int(session["min_age_limit"]))
 
                 # Add all centers to hesitancy dataframe
                 if (float(center_id) not in dfHes["Center ID"]):
@@ -265,57 +276,64 @@ try:
                     dfHes.loc[dfHes["Center ID"] == float(
                         center_id), "Dose Capacity"] = maxDoseCapacity
 
-            
+
             addCenterTime += time.process_time() - startAdd
             startUpdate = time.process_time()
 
-            try:
-                # loop through centers in district
-                for c in range(len(centers['centers'])):
-                    # get center_id
-                    center_id = centers['centers'][c]['center_id']
-                    # variable for checking consecutive openings
-                    consecutiveSlot = 0
-                    # loop through sessions in a center
-                    for s in range(len(centers['centers'][c]['sessions'])):
-                        session = centers['centers'][c]['sessions'][s]
-                        date_session = session['date']
-                        date_session = dt.datetime.strptime(
-                            date_session, '%d-%m-%Y')
-                        # convert date to 25-May, 25-Jun format
-                        date_session = dt.datetime.strftime(date_session, '%d-%b')
-                        date_session = str(date_session)
-                        currentTime = str(dt.today().strftime('%d-%b %H-%M'))
+            # try:
 
-                        # check if dose1 >= 10 and min_age_limit == 18
-                        if session['available_capacity_dose1'] >= 10 and session["min_age_limit"] == 18:
-                            # Get type of cell
-                            res = dfMain.loc[dfMain["Center ID"] == float(
-                                center_id), date_session].apply(type)
-                            # check if type of cell is not str
-                            if (res != str).bool():
-                                if consecutiveSlot == 0:
-                                    dfMain.loc[dfMain["Center ID"] ==
-                                            float(center_id), date_session] = currentTime
-                                    print(centers['centers'][c]['name'] +
-                                        " " + str(centers['centers'][c]['pincode']))
-                                    consecutiveSlot += 1
-                                elif consecutiveSlot > 0:
-                                    consecutiveSlot += 1
-                                    dfMain.loc[dfMain["Center ID"] == float(
-                                        center_id), date_session] = currentTime
-                        if session['available_capacity_dose1'] >= 10:
+            # loop through centers in district
+            for c in range(len(centers['centers'])):
+                # get center_id
+                center_id = centers['centers'][c]['center_id']
+                # variable for checking consecutive openings
+                # consecutiveSlot = 0
+                # loop through sessions in a center
+                for s in range(len(centers['centers'][c]['sessions'])):
+                    session = centers['centers'][c]['sessions'][s]
+                    date_session = session['date']
+                    date_session = dt.datetime.strptime(
+                        date_session, '%d-%m-%Y')
+                    # convert date to 25-May, 25-Jun format
+                    date_session = dt.datetime.strftime(date_session, '%d-%b')
+                    date_session = str(date_session)
+                    currentTime = str(dt.datetime.today().strftime('%d-%b %H-%M'))
+
+                    # check if dose1 >= 10 and min_age_limit == 18
+                    if session['available_capacity_dose1'] >= 10 and session["min_age_limit"] == 18:
+                        # Get type of cell
+                        res = dfMain.loc[dfMain["Center ID"] == float(
+                            center_id), date_session].apply(type)
+
+                        # check if type of cell is not str
+                        if (res != str).bool():
+                            dfMain.loc[dfMain["Center ID"] == float(center_id), date_session] = currentTime
+                            # if consecutiveSlot == 0:
+                            #     dfMain.loc[dfMain["Center ID"] ==
+                            #             float(center_id), date_session] = currentTime
+                            #     print(centers['centers'][c]['name'] +
+                            #         " " + str(centers['centers'][c]['pincode']))
+                            #     consecutiveSlot += 1
+                            # elif consecutiveSlot > 0:
+                            #     consecutiveSlot += 1
+                            #     dfMain.loc[dfMain["Center ID"] == float(
+                            #         center_id), date_session] = currentTime
+                    if session['available_capacity_dose1'] >= 10:
+                        try:
+
                             if dfHes.loc[dfHes["Center ID"] == float(center_id), date_session].isnull().item():
                                 dfHes.loc[dfHes["Center ID"] == float(center_id), date_session] = 0
                             currentMin = int(
-                                dfHes.loc[dfHes["Center ID"] == float(center_id), date_session].item())
+                            dfHes.loc[dfHes["Center ID"] == float(center_id), date_session].item())
                             dfHes.loc[dfHes["Center ID"] == float(
                                 center_id), date_session] = currentMin + 5
+                        except:
+                            # print(f"Error in Center ID {center_id}")
+                            pass
 
-            except:
-                continue
-            
             updateCenterTime += time.process_time() - startUpdate
+            # except:
+            #     continue
 
         print("Time taken to add centers", addCenterTime)
         print("Time taken to update centers", updateCenterTime)
@@ -345,12 +363,13 @@ try:
 
     secondsTo23_30 = (nt - s1).total_seconds()
 
+    cia(districts)
+
     inter = setInterval(315, cia, districts)
     print("Interval Started")
     t = threading.Timer(secondsTo23_30, inter.cancel)
     t.start()
 
-    cia(districts)
 
 
     # Scheduler
