@@ -218,6 +218,7 @@ try:
 
                         # check if type of cell is not str
                         if (res != str).bool():
+                            print(print(centers['centers'][c]['name'] + " " + str(centers['centers'][c]['pincode'])))
                             dfMain.loc[dfMain["Center ID"] == float(center_id), date_session] = currentTime
                             # if consecutiveSlot == 0:
                             #     dfMain.loc[dfMain["Center ID"] ==
