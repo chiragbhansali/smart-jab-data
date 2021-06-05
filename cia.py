@@ -179,10 +179,12 @@ try:
         addCenterTime = 0
         updateCenterTime = 0
         saveCenterTime = 0
+        apiCallTime = 0
 
         # Loop through districts
         for district_id in list(dict_1):
             # Check if API Rate limit has been exceeded
+            startAPICall = time.process_time()
             try:
                 # Get data from CoWin API for district ID
                 centers = cowin.get_availability_by_district(str(district_id))
@@ -192,6 +194,8 @@ try:
             except:
                 print("Error in API Calls")
                 continue
+
+            apiCallTime += time.process_time() - startAPICall
             # Loop through centers in the district
 
             startAdd = time.process_time()
@@ -223,7 +227,6 @@ try:
                     )
                     # Append new center row to df
                     dfMain = dfMain.append(test, ignore_index=True)
-                    dfMain.drop_duplicates(subset=['Center ID'], inplace=True)
 
                 # ageList = []
                 # for session in i["sessions"]:
@@ -248,7 +251,11 @@ try:
                     )
                     # Append new center row to df
                     dfHes = dfHes.append(test, ignore_index=True)
-                    dfHes.drop_duplicates(subset=['Center ID'], inplace=True)
+
+                # Drop duplicates in both dataframes
+                dfMain.drop_duplicates(subset=['Center ID'], inplace=True)
+                dfHes.drop_duplicates(subset=['Center ID'], inplace=True)
+
                 # Fill max dose capacity of center in main dataframe
                 if i["sessions"][0]["min_age_limit"] == 18:
                     doseCapacity = []
@@ -335,6 +342,7 @@ try:
             # except:
             #     continue
 
+        print("Time taken to call API", apiCallTime)
         print("Time taken to add centers", addCenterTime)
         print("Time taken to update centers", updateCenterTime)
         startSave = time.process_time()
