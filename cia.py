@@ -176,6 +176,10 @@ try:
         cowin = CoWinAPI()
         # Current time
         print(now)
+        addCenterTime = 0
+        updateCenterTime = 0
+        saveCenterTime = 0
+
         # Loop through districts
         for district_id in list(dict_1):
             # Check if API Rate limit has been exceeded
@@ -188,6 +192,8 @@ try:
             except:
                 continue
             # Loop through centers in the district
+
+            startAdd = time.process_time()
 
             for i in centers['centers']:
                 # Get Center ID of the center
@@ -259,6 +265,9 @@ try:
                     dfHes.loc[dfHes["Center ID"] == float(
                         center_id), "Dose Capacity"] = maxDoseCapacity
 
+            
+            addCenterTime += time.process_time() - startAdd
+            startUpdate = time.process_time()
 
             try:
                 # loop through centers in district
@@ -276,6 +285,7 @@ try:
                         # convert date to 25-May, 25-Jun format
                         date_session = dt.datetime.strftime(date_session, '%d-%b')
                         date_session = str(date_session)
+                        currentTime = str(dt.today().strftime('%d-%b %H-%M'))
 
                         # check if dose1 >= 10 and min_age_limit == 18
                         if session['available_capacity_dose1'] >= 10 and session["min_age_limit"] == 18:
@@ -286,14 +296,14 @@ try:
                             if (res != str).bool():
                                 if consecutiveSlot == 0:
                                     dfMain.loc[dfMain["Center ID"] ==
-                                            float(center_id), date_session] = now
+                                            float(center_id), date_session] = currentTime
+                                    print(centers['centers'][c]['name'] +
+                                        " " + str(centers['centers'][c]['pincode']))
                                     consecutiveSlot += 1
                                 elif consecutiveSlot > 0:
                                     consecutiveSlot += 1
-                                    print(centers['centers'][c]['name'] +
-                                        " " + str(centers['centers'][c]['pincode']))
                                     dfMain.loc[dfMain["Center ID"] == float(
-                                        center_id), date_session] = 'Prev'
+                                        center_id), date_session] = currentTime
                         if session['available_capacity_dose1'] >= 10:
                             if dfHes.loc[dfHes["Center ID"] == float(center_id), date_session].isnull().item():
                                 dfHes.loc[dfHes["Center ID"] == float(center_id), date_session] = 0
@@ -301,8 +311,15 @@ try:
                                 dfHes.loc[dfHes["Center ID"] == float(center_id), date_session].item())
                             dfHes.loc[dfHes["Center ID"] == float(
                                 center_id), date_session] = currentMin + 5
+
             except:
                 continue
+            
+            updateCenterTime += time.process_time() - startUpdate
+
+        print("Time taken to add centers", addCenterTime)
+        print("Time taken to update centers", updateCenterTime)
+        startSave = time.process_time()
 
         dfMain = dfMain.sort_values(["State", "District"], ascending=(True, True))
         dfHes = dfHes.sort_values(["State", "District"], ascending=(True, True))
@@ -315,10 +332,10 @@ try:
             dfHes.to_csv('centers_top100_hesitancy_copy.csv')
         except:
             pass
+        print("Time taken to save files", time.process_time() - startSave)
         print(f"{str(dt.datetime.today())[11:16]} CSV Saved")
 
 
-    cia(districts)
 
     # Set Interval till 23:30 pm
 
@@ -332,6 +349,9 @@ try:
     print("Interval Started")
     t = threading.Timer(secondsTo23_30, inter.cancel)
     t.start()
+
+    cia(districts)
+
 
     # Scheduler
     # print("scheduler start")
