@@ -270,7 +270,7 @@ try:
 
     def sheetUpload(csvName):
         gc = gspread.service_account(filename='./clientapi.json')
-        sh = gc.open("Top 100 Center DB")
+        sh = gc.open("Top 25 Center DB")
         dfMain = pd.read_csv(f"{folder}/{csvName}_copy.csv")
         # dfHes = pd.read_csv(F"{folder}/{csvName}_hesitancy_copy.csv")
         dfArr = [dfMain]
@@ -280,7 +280,7 @@ try:
                 df.drop(columns=list(df.columns)[0], inplace=True)
         dfMain = dfMain.fillna('')
         # dfHes = dfHes.fillna('')
-        worksheet_main = sh.get_worksheet(2)
+        worksheet_main = sh.get_worksheet(0)
         # worksheet_hes = sh.get_worksheet(1)
         dfSheetMain = pd.DataFrame(worksheet_main.get_all_records())
         # dfSheetHes = pd.DataFrame(worksheet_hes.get_all_records())
