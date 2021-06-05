@@ -87,7 +87,7 @@ try:
         for df in dfArr:
             if list(df.columns)[0] != "Center Name":
                 df.drop(columns=list(df.columns)[0], inplace=True)
-        
+
         # Current time in format HH:MM
         now = str(dt.datetime.today())[11:16]
         # Start date
