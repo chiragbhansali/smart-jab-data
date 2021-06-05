@@ -86,6 +86,8 @@ try:
         for df in dfArr:
             if list(df.columns)[0] != "Center Name":
                 df.drop(columns=list(df.columns)[0], inplace=True)
+        
+        dfMain = dfMain.fillna('')
 
         # Current time in format HH:MM
         now = str(dt.datetime.today())[11:16]
@@ -106,6 +108,7 @@ try:
                 print("API Rate Limit Exceeded!")
                 continue
             except:
+                print("Error in CoWin API Calls")
                 continue
             # Loop through centers in the district
 
@@ -202,12 +205,16 @@ try:
                             # Get type of cell
                             res = dfMain.loc[dfMain["Center ID"] == float(
                                 center_id), date_session].apply(type)
+                            print(centers['centers'][c]['name'] +
+                                        " " + str(centers['centers'][c]['pincode']))
                             # check if type of cell is not str
-                            if (res != str).bool():
+                            if dfMain.loc[dfMain["Center ID"] == float(center_id), date_session].item() != '':
                                 if consecutiveSlot == 0:
                                     dfMain.loc[dfMain["Center ID"] ==
                                             float(center_id), date_session] = now
                                     consecutiveSlot += 1
+                                    print(centers['centers'][c]['name'] +
+                                        " " + str(centers['centers'][c]['pincode']))
                                 elif consecutiveSlot > 0:
                                     consecutiveSlot += 1
                                     print(centers['centers'][c]['name'] +
