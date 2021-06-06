@@ -9,6 +9,7 @@ import json
 import threading
 import winsound
 import traceback
+import math
 
 errorSound = {
     "duration" : 10000,  # milliseconds
@@ -150,6 +151,8 @@ class setInterval:
     def cancel(self):
         self.stopEvent.set()
 
+def roundup(x):
+    return int(math.ceil(x / 100.0)) * 100
 
 def today() -> str:
     return dt.datetime.now().strftime("%d-%m-%Y")
@@ -261,7 +264,7 @@ try:
                     doseCapacity = []
                     for session in i["sessions"]:
                         doseCapacity.append(session["available_capacity"])
-                    maxDC = max(doseCapacity)
+                    maxDC = roundup(max(doseCapacity))
                     if not (dfMain.loc[dfMain["Center ID"] == float(center_id), "Dose Capacity"].empty):
                         currentCapacityDf = dfMain.loc[dfMain["Center ID"] == float(center_id), "Dose Capacity"].item()
                     maxDoseCapacity = max(int(maxDC), int(currentCapacityDf))
@@ -272,7 +275,7 @@ try:
                     doseCapacity = []
                     for session in i["sessions"]:
                         doseCapacity.append(session["available_capacity"])
-                    maxDC = max(doseCapacity)
+                    maxDC = roundup(max(doseCapacity))
                     # Try catch is used here since some centers have wrong center IDs and hence, pandas is not able to find any center using the center ID
                     try:
                         currentCapacityDf = dfHes.loc[dfHes["Center ID"]
@@ -282,7 +285,6 @@ try:
                     maxDoseCapacity = max(int(maxDC), int(currentCapacityDf))
                     dfHes.loc[dfHes["Center ID"] == float(
                         center_id), "Dose Capacity"] = maxDoseCapacity
-
 
             addCenterTime += time.process_time() - startAdd
             startUpdate = time.process_time()
