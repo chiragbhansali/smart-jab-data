@@ -1,9 +1,12 @@
 import pandas as pd
+# import ray
+# ray.init()
+# import modin.pandas as pd
 import numpy as np
 from cowin_api import CoWinAPI
 import datetime as dt
 import time
-import schedule
+# import schedule
 import threading
 import json
 import threading
@@ -12,9 +15,10 @@ import traceback
 import math
 
 errorSound = {
-    "duration" : 10000,  # milliseconds
-    "freq" : 440  # Hz
+    "duration": 10000,  # milliseconds
+    "freq": 440  # Hz
 }
+
 
 def makeSound():
     winsound.Beep(errorSound["freq"], errorSound["duration"])
@@ -151,11 +155,14 @@ class setInterval:
     def cancel(self):
         self.stopEvent.set()
 
+
 def roundup(x):
     return int(math.ceil(x / 100.0)) * 100
 
+
 def today() -> str:
     return dt.datetime.now().strftime("%d-%m-%Y")
+
 
 try:
     def cia(dict_1):
@@ -180,6 +187,9 @@ try:
         # Current time
         print(now)
         addCenterTime = 0
+        updateDoseTime = 0
+        appendRowTime = 0
+        dropDuplicateTime = 0
         updateCenterTime = 0
         saveCenterTime = 0
         apiCallTime = 0
@@ -187,7 +197,7 @@ try:
         # Loop through districts
         for district_id in list(dict_1):
             # Check if API Rate limit has been exceeded
-            startAPICall = time.process_time()
+            # startAPICall = time.process_time()
             try:
                 # Get data from CoWin API for district ID
                 centers = cowin.get_availability_by_district(str(district_id))
@@ -198,12 +208,11 @@ try:
                 print("Error in API Calls")
                 continue
 
-            apiCallTime += time.process_time() - startAPICall
+            # apiCallTime += time.process_time() - startAPICall
             # Loop through centers in the district
 
-            startAdd = time.process_time()
-
             for i in centers['centers']:
+                # startAdd = time.process_time()
                 # Get Center ID of the center
                 center_id = i['center_id']
                 # print(json.dumps(i, indent=1))
@@ -212,6 +221,7 @@ try:
                     if session["min_age_limit"] == 18:
                         ifAge18Exists = True
                         break
+                # startAppend = time.process_time()
                 # If Center ID is not in the dataframe, add all its details to main dataframe
                 if (float(center_id) not in dfMain["Center ID"]) and ifAge18Exists:
                     test = pd.DataFrame(
@@ -230,6 +240,7 @@ try:
                     )
                     # Append new center row to df
                     dfMain = dfMain.append(test, ignore_index=True)
+                    dfMain.drop_duplicates(subset=['Center ID'], inplace=True)
 
                 # ageList = []
                 # for session in i["sessions"]:
@@ -254,11 +265,23 @@ try:
                     )
                     # Append new center row to df
                     dfHes = dfHes.append(test, ignore_index=True)
+                    dfHes.drop_duplicates(subset=['Center ID'], inplace=True)
 
+                # appendRowTime += (time.process_time() - startAppend)
                 # Drop duplicates in both dataframes
-                dfMain.drop_duplicates(subset=['Center ID'], inplace=True)
-                dfHes.drop_duplicates(subset=['Center ID'], inplace=True)
+                # startDropDuplicate = time.process_time()
 
+
+                # print(f"dfMain is unique: {}")
+                # if dfMain.duplicated(subset=['Center ID']).any():
+                #     print("dfMain has duplicates")
+                # if dfHes.duplicated(subset=['Center ID']).any():
+                #     print("dfHes has duplicates")
+
+
+                # dropDuplicateTime += (time.process_time() - startDropDuplicate)
+                # addCenterTime += time.process_time() - startAdd
+                # startDoseUpdating = time.process_time()
                 # Fill max dose capacity of center in main dataframe
                 if i["sessions"][0]["min_age_limit"] == 18:
                     doseCapacity = []
@@ -266,7 +289,8 @@ try:
                         doseCapacity.append(session["available_capacity"])
                     maxDC = roundup(max(doseCapacity))
                     if not (dfMain.loc[dfMain["Center ID"] == float(center_id), "Dose Capacity"].empty):
-                        currentCapacityDf = dfMain.loc[dfMain["Center ID"] == float(center_id), "Dose Capacity"].item()
+                        currentCapacityDf = dfMain.loc[dfMain["Center ID"] == float(
+                            center_id), "Dose Capacity"].item()
                     maxDoseCapacity = max(int(maxDC), int(currentCapacityDf))
                     dfMain.loc[dfMain["Center ID"] == float(
                         center_id), "Dose Capacity"] = maxDoseCapacity
@@ -279,15 +303,15 @@ try:
                     # Try catch is used here since some centers have wrong center IDs and hence, pandas is not able to find any center using the center ID
                     try:
                         currentCapacityDf = dfHes.loc[dfHes["Center ID"]
-                                                    == float(center_id), "Dose Capacity"].item()
+                                                      == float(center_id), "Dose Capacity"].item()
                     except:
                         pass
                     maxDoseCapacity = max(int(maxDC), int(currentCapacityDf))
                     dfHes.loc[dfHes["Center ID"] == float(
                         center_id), "Dose Capacity"] = maxDoseCapacity
+                # updateDoseTime += (time.process_time() - startDoseUpdating)
 
-            addCenterTime += time.process_time() - startAdd
-            startUpdate = time.process_time()
+            # startUpdate = time.process_time()
 
             # try:
 
@@ -306,7 +330,8 @@ try:
                     # convert date to 25-May, 25-Jun format
                     date_session = dt.datetime.strftime(date_session, '%d-%b')
                     date_session = str(date_session)
-                    currentTime = str(dt.datetime.today().strftime('%d-%b %H-%M'))
+                    currentTime = str(
+                        dt.datetime.today().strftime('%d-%b %H-%M'))
 
                     # check if dose1 >= 10 and min_age_limit == 18
                     if session['available_capacity_dose1'] >= 10 and session["min_age_limit"] == 18:
@@ -316,7 +341,8 @@ try:
 
                         # check if type of cell is not str
                         if (res != str).bool():
-                            dfMain.loc[dfMain["Center ID"] == float(center_id), date_session] = currentTime
+                            dfMain.loc[dfMain["Center ID"] == float(
+                                center_id), date_session] = currentTime
                             # if consecutiveSlot == 0:
                             #     dfMain.loc[dfMain["Center ID"] ==
                             #             float(center_id), date_session] = currentTime
@@ -331,26 +357,32 @@ try:
                         try:
 
                             if dfHes.loc[dfHes["Center ID"] == float(center_id), date_session].isnull().item():
-                                dfHes.loc[dfHes["Center ID"] == float(center_id), date_session] = 0
+                                dfHes.loc[dfHes["Center ID"] == float(
+                                    center_id), date_session] = 0
                             currentMin = int(
-                            dfHes.loc[dfHes["Center ID"] == float(center_id), date_session].item())
+                                dfHes.loc[dfHes["Center ID"] == float(center_id), date_session].item())
                             dfHes.loc[dfHes["Center ID"] == float(
                                 center_id), date_session] = currentMin + 5
                         except:
                             # print(f"Error in Center ID {center_id}")
                             pass
 
-            updateCenterTime += time.process_time() - startUpdate
+            # updateCenterTime += time.process_time() - startUpdate
             # except:
             #     continue
 
-        print("Time taken to call API", apiCallTime)
-        print("Time taken to add centers", addCenterTime)
-        print("Time taken to update centers", updateCenterTime)
-        startSave = time.process_time()
+        # print("Time taken to call API", apiCallTime)
+        # print("Time taken to add centers", addCenterTime)
+        # print("Time taken to add rows", appendRowTime)
+        # print("Time taken to remove duplicates", dropDuplicateTime)
+        # print("Time taken to update dose capacity", updateDoseTime)
+        # print("Time taken to update centers", updateCenterTime)
+        # startSave = time.process_time()
 
-        dfMain = dfMain.sort_values(["State", "District"], ascending=(True, True))
-        dfHes = dfHes.sort_values(["State", "District"], ascending=(True, True))
+        dfMain = dfMain.sort_values(
+            ["State", "District"], ascending=(True, True))
+        dfHes = dfHes.sort_values(
+            ["State", "District"], ascending=(True, True))
         dfMain.to_csv('centers_top100.csv')
         dfHes.to_csv('centers_top100_hesitancy.csv')
         dfMain.to_csv('./smart-jab-database/centers_top100.csv')
@@ -360,10 +392,8 @@ try:
             dfHes.to_csv('centers_top100_hesitancy_copy.csv')
         except:
             pass
-        print("Time taken to save files", time.process_time() - startSave)
+        # print("Time taken to save files", time.process_time() - startSave)
         print(f"{str(dt.datetime.today())[11:16]} CSV Saved")
-
-
 
     # Set Interval till 23:30 pm
 
@@ -379,8 +409,6 @@ try:
     print("Interval Started")
     t = threading.Timer(secondsTo23_30, inter.cancel)
     t.start()
-
-
 
     # Scheduler
     # print("scheduler start")

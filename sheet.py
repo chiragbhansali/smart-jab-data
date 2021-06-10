@@ -5,6 +5,9 @@ import datetime as dt
 import time
 import threading
 import math
+import schedule
+
+# Config
 
 gc = gspread.service_account(filename='./cowin-data-a3988c41e946.json')
 sh = gc.open("Top 100 Center DB")
@@ -22,6 +25,7 @@ worksheet_hes = sh.get_worksheet(1)
 dfSheetMain = pd.DataFrame(worksheet_main.get_all_records())
 dfSheetHes = pd.DataFrame(worksheet_hes.get_all_records())
 
+# Sheet Update Counter
 sheetUpdateCount = 0
 
 # Adding centers in main df
@@ -42,7 +46,7 @@ for i in dfMain.index:
                 upd = np.uint32(int(bar.loc[0].values[j])).item()
             cell_list[j].value = upd
         # print("Sheet Update Count in Main DF", sheetUpdateCount)
-        if sheetUpdateCount == 59:
+        if sheetUpdateCount >= 59:
             print("time out taken")
             time.sleep(62) # pause code execution for a minute
             sheetUpdateCount = 0
@@ -65,7 +69,7 @@ for i in dfHes.index:
                 bar.loc[0].values[j] = int(bar.loc[0].values[j])
             upd = (bar.loc[0].values[j])
             cell_list[j].value = upd
-        if sheetUpdateCount == 59:
+        if sheetUpdateCount >= 59:
             print("time out taken")
             time.sleep(62) # pause code execution for a minute
             sheetUpdateCount = 0
@@ -96,13 +100,15 @@ for i in dfSheetMain.index:
         date = dt.datetime.strftime(date, '%d-%b')
         if dfMain.loc[dfMain["Center ID"] == float(center_id), date].item() != '' and (not (dfMain.loc[dfMain["Center ID"] == float(center_id), date].isnull().item())):
             if dfSheetMain.loc[dfSheetMain["Center ID"] == float(center_id), date].empty:
-                print("in the na block")
-                dfSheetMain.loc[dfSheetMain["Center ID"] == float(center_id), date] = 0
+                print(f"in the na block:")
+                dfSheetMain.loc[dfSheetMain["Center ID"] == float(center_id), date] = ""
+                print(f"Value in dfMain - {dfMain.loc[dfMain['Center ID'] == float(center_id), date]}")
+                print(f"Value in dfSheetMain - {dfSheetMain.loc[dfSheetMain['Center ID'] == float(center_id), date]}")
             if dfMain.loc[dfMain["Center ID"] == float(center_id), date].item() != dfSheetMain.loc[dfSheetMain["Center ID"] == float(center_id), date].item():
                 cellIndexRel = dfSheetMain.index[dfSheetMain["Center ID"] == float(center_id)].tolist()[0]
                 cell_index = date_dict[date]+str(cellIndexRel+2)
                 value = dfMain.loc[dfMain["Center ID"] == float(center_id), date].item()
-                if sheetUpdateCount == 59:
+                if sheetUpdateCount >= 59:
                     print("time out taken")
                     time.sleep(62) # pause code execution for a minute
                     sheetUpdateCount = 0
@@ -134,7 +140,7 @@ for i in dfSheetHes.index:
                 cellIndexRel = dfSheetHes.index[dfSheetHes["Center ID"] == float(center_id)].tolist()[0]
                 cell_index = date_dict[date]+str(cellIndexRel+2)
                 value = dfHes.loc[dfHes["Center ID"] == float(center_id), date].item()
-                if sheetUpdateCount == 59:
+                if sheetUpdateCount >= 59:
                     print("time out taken")
                     time.sleep(62) # pause code execution for a minute
                     sheetUpdateCount = 0
