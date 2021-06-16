@@ -37,7 +37,7 @@ for i in dfMain.index:
         bar=pd.DataFrame(columns=list(dfSheetMain.columns))
         bar = bar.append(row, ignore_index=True)
         bar = bar.fillna('')
-        cell_list = worksheet_main.range(('A'+str(z)+':'+'FO'+str(z)))
+        cell_list = worksheet_main.range(('A'+str(z)+':'+'DF'+str(z)))
         # bar.fillna('', inplace=True)
         for j in range(len(cell_list)):
             upd = bar.loc[0].values[j]
@@ -62,7 +62,7 @@ for i in dfHes.index:
     if (row['Center ID']) not in list(dfSheetHes['Center ID']):
         bar=pd.DataFrame(columns=list(dfSheetHes.columns))
         bar = bar.append(row, ignore_index=True)
-        cell_list = worksheet_hes.range(('A'+str(y)+':'+'FM'+str(y)))
+        cell_list = worksheet_hes.range(('A'+str(y)+':'+'DD'+str(y)))
 
         for j in range(len(cell_list)):
             if type(bar.loc[0].values[j]) == float:
